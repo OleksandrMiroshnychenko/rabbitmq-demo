@@ -1,0 +1,74 @@
+version: '3'
+services:
+  rabbit1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: rabbit1
+    ports:
+      - 15672:15672
+      - 5672:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_VHOST=/
+    volumes:
+      - ./data:/var/lib/rabbitmq/
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+    entrypoint: /usr/local/bin/cluster-entrypoint.sh
+
+  rabbit2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: rabbit2
+    links:
+      - rabbit1
+    ports:
+      - 15682:15672
+      - 5682:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_VHOST=/
+      - JOIN_CLUSTER_HOST=rabbit1
+    volumes:
+      - ./data:/var/lib/rabbitmq/
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+    entrypoint: /usr/local/bin/cluster-entrypoint.sh
+
+  rabbit3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: rabbit3
+    links:
+      - rabbit1
+      - rabbit2
+    ports:
+      - 15692:15672
+      - 5692:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_VHOST=/
+      - JOIN_CLUSTER_HOST=rabbit1
+    volumes:
+      - ./data:/var/lib/rabbitmq/
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./cluster-entrypoint.sh:/usr/local/bin/cluster-entrypoint.sh
+    entrypoint: /usr/local/bin/cluster-entrypoint.sh
+
+#  haproxy:
+#    image: haproxy:1.7
+#    volumes:
+#      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+#    depends_on:
+#      - rabbit1
+#      - rabbit2
+#      - rabbit3
+#    ports:
+#      - 15672:15672
+#      - 5672:5672
