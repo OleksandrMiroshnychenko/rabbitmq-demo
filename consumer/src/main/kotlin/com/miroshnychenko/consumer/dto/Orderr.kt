@@ -2,7 +2,7 @@ package com.miroshnychenko.consumer.dto
 
 import java.io.Serializable
 
-class Order() : Serializable {
+class Orderr() : Serializable {
     var id: Int? = null
     var description: String? = null
     var type: OrderType? = null
